@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title> play.ypus </title>
+  <style>
+    :root {
+      --bg: #0b0b0c;
+      --panel: #0f1113;
+      --muted: #9aa0a6;
+      --accent: #9fbfff
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    html,
+    body {
+      height: 100%
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(180deg, #050506 0%, #0b0b0c 60%);
+      color: #e6eef8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px
+    }
+
+    .card {
+      width: 900px;
+      max-width: 100%;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      border-radius: 12px;
+      padding: 28px;
+      box-shadow: 0 10px 30px rgba(2, 6, 23, 0.6)
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 20px
+    }
+
+    p.lead {
+      margin: 0 0 20px;
+      color: var(--muted)
+    }
+
+    .meter {
+      font-family: monospace;
+      background: #060607;
+      padding: 18px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      font-size: 18px;
+      letter-spacing: 1px
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+      align-items: center
+    }
+
+    input[type=number],
+    input[type=text] {
+      width: 220px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      background: transparent;
+      color: inherit;
+      font-size: 16px
+    }
+
+    button {
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 0;
+      background: #ffffff;
+      color: #000000;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    button.secondary {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      color: var(--muted)
+    }
+
+    .result {
+      margin-top: 18px;
+      padding: 14px;
+      border-radius: 8px;
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0.01), rgba(255, 255, 255, 0.02));
+      border: 1px solid rgba(255, 255, 255, 0.02)
+    }
+
+    .small {
+      font-size: 13px;
+      color: var(--muted)
+    }
+
+    .watermark {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      opacity: 0.04;
+      font-size: 76px;
+      font-weight: 800;
+      transform: rotate(-15deg);
+      pointer-events: none
+    }
+
+    footer {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 13px
+    }
+
+    .hintBox {
+      margin-top: 12px;
+      padding: 10px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px dashed rgba(255, 255, 255, 0.02)
+    }
+
+    .secretRevealed {
+      font-family: monospace;
+      background: #060607;
+      padding: 12px;
+      margin-top: 10px;
+      border-radius: 6px
+    }
+
+    .hidden {
+      display: none
+    }
+
+    a.hintLink {
+      color: inherit;
+      text-decoration: underline
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h1> ?? </h1>
+    <p class="lead"> De: T.A.I </p>
+
+    <!-- RIDDLE STAGE -->
+    <div id="riddleStage">
+      <div class="meter" id="riddleBox">Acertijo: <em> Soy Negro y aun asi las personas me ven, la pista no facil te
+          doy, sino el juego me ganó. Para la respuesta obtener en mis paginas deberas buscar. </em></div>
+      <div class="controls" style="margin-top:12px">
+        <label class="small">Tu respuesta:</label>
+        <input id="riddleInput" type="text" placeholder="escribí tu respuesta" />
+        <button onclick="checkKey()"
+          style="background-color: white; color: black; padding: 10px 20px; border: 2px solid black; border-radius: 8px; cursor: pointer;">Probar
+          clave</button>
+        <button id="riddleHint" class="secondary">Pista</button>
+      </div>
+      <div class="result" id="riddleResult">
+        <div class="small">Estado:</div>
+        <div id="riddleText" class="secretRevealed">—</div>
+      </div>
+    </div>
+
+    <!-- CIPHER STAGE (oculto hasta resolver riddle) -->
+    <div id="cipherStage" class="hidden">
+      <div class="meter" id="cipherBox">Cargando...</div>
+
+      <div class="controls">
+        <label class="small">Clave numérica:</label>
+        <input id="keyInput" type="number" placeholder="ingresá cualquier número" />
+        <button id="tryBtn">Probar</button>
+        <button id="hintBtn" class="secondary">Pista</button>
+
+      </div>
+
+      <div class="result" id="resultArea">
+        <div class="small">Resultado:</div>
+        <div id="resultText" class="secretRevealed">—</div>
+      </div>
+
+      <div class="hintBox" id="hintBox"><span class="small">Pista disponible: pulsa <strong>Pista</strong> — pero la
+          pista no te dirá la clave directamente.</span></div>
+
+      <footer> Acertale a la clave correcta o solo ruido tendrás. </footer>
+    </div>
+  </div>
+
+  <div class="watermark" id="watermark">l</div>
+
+  <script>
+
+    // NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VERNO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER TRAMPOSO.
+
+    const PLAIN = "RESUELVE EL ACERTIJO PARA SEGUIR";
+    const SECRET_SHIFT = 67;
+
+    function caesarShift(text, shift) {
+      const A = 'A'.charCodeAt(0);
+      return text.split('').map(ch => {
+        const code = ch.charCodeAt(0);
+        if (code >= 65 && code <= 90)
+          return String.fromCharCode((code - A + shift + 26) % 26 + A);
+        if (code >= 97 && code <= 122)
+          return String.fromCharCode((code - 97 + shift + 26) % 26 + 97);
+        return ch;
+      }).join('');
+    }
+
+    let cipher = caesarShift(PLAIN, SECRET_SHIFT);
+    const cipherBox = document.getElementById('cipherBox');
+    const resultText = document.getElementById('resultText');
+    const keyInput = document.getElementById('keyInput');
+    const tryBtn = document.getElementById('tryBtn');
+    const hintBtn = document.getElementById('hintBtn');
+
+    const hintBox = document.getElementById('hintBox');
+
+    const riddleInput = document.getElementById('riddleInput');
+    const riddleHint = document.getElementById('riddleHint');
+    const riddleText = document.getElementById('riddleText');
+    const riddleStage = document.getElementById('riddleStage');
+    const cipherStage = document.getElementById('cipherStage');
+
+    function showCipher(text) {cipherBox.textContent = text;}
+
+    const validAnswers = ['pantalla', 'pantalla del celular', 'celular', 'móvil', 'movil', 'monitor', 'screen'];
+    function checkRiddle() {
+      const ans = (riddleInput.value || '').trim().toLowerCase();
+      if (!ans) {riddleText.textContent = 'Escribí algo antes de enviar.'; return;}
+      if (validAnswers.includes(ans)) {
+        riddleText.textContent = 'Pista: "El número que harto a todos nos tiene, pero el que solo los virgos celebran".';
+        riddleStage.classList.add('hidden');
+        cipherStage.classList.remove('hidden');
+        showCipher(cipher);
+      } else {
+        riddleText.textContent = 'Ehhh no. Intenta de nuevo.';
+      }
+    }
+
+    riddleInput.addEventListener('keydown', e => {if (e.key === 'Enter') checkRiddle();});
+
+    document.querySelector('#riddleStage button').onclick = checkRiddle;
+
+    // NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VERNO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER NO BUSQUES AQUÍ, NO HAY NADA QUE VER TRAMPOSO.
+
+    function checkKey() {
+      const val = Number(keyInput.value);
+      if (val === 67) {
+        resultText.textContent = 'Scolica enchiriadis (clave correcta)';
+      } else {
+        resultText.textContent = 'Clave incorrecta';
+      }
+    }
+
+    tryBtn.onclick = checkKey;
+    keyInput.addEventListener('keydown', e => {if (e.key === 'Enter') checkKey();});
+
+    // Pista
+    hintBtn.onclick = () => {
+      hintBox.innerHTML = '<span class="small">La pista ya la viste: el número que solo los virgos celebran.</span>';
+    }
+
+
+
+  </script>
+</body>
+
+</html>
